@@ -14,15 +14,23 @@
 #
 
 #	ArmA 3 Workshop Content Directory
-workshoppath='/home/lgsm/.steam/steamapps/workshop/content/107410/'
+workshoppath='/home/lgsm/.steam/steam/steamapps/workshop/content/107410/'
 #	ArmA 3 Mods Directory
-modpath='/home/lgsm/arma/serverfiles/mods'
+modpath='/home/lgsm/arma/serverfiles/mods/'
 #	ArmA 3 Keys Directory
-keypath='/home/lgsm/arma/serverfiles/keys'
+keypath='/home/lgsm/arma/serverfiles/keys/'
+
+#	lgsm config file containing steam username and password
+lgsmconfig='/home/lgsm/arma/lgsm/config-lgsm/arma3server/secrets-common.cfg'
+
+instanceconfig='/home/lgsm/arma/lgsm/config-lgsm/arma3server/arma3server.cfg'
 
 #	lgsm SteamCMD path & game gameid
-steamcmd='/home/lgsm/.steam/steamcmd/steamcmd.sh'
-gameid='107410'	# ArmA 3
+steamcmd='/usr/games/steamcmd'
+# Arma 3 game id
+gameid='107410'
+# Arma 3 Modlists
+modlists='/home/lgsm/arma/modlists'
 
 #
 #	---------------------------------
@@ -30,6 +38,10 @@ gameid='107410'	# ArmA 3
 #	DONT EDIT ANYTHING PAST THIS LINE
 #	(Unless you know what you are doing)
 #
+
+
+steamuser=$(awk -F "=" '/steamuser/ {print $2}' $lgsmconfig)
+steampass=$(awk -F "=" '/steampass/ {print $2}' $lgsmconfig)
 
 #
 #	Lowercases all mods
@@ -86,7 +98,7 @@ function lowercase() {
 				y="${x:${#workshoppath}}"
 			
 				#Here we lowercase the mod files / folders
-				declare -l y
+				y=$(echo "${y}" | tr '[:upper:]' '[:lower:]')
 
 				#Here we create the new path + lowercased mod
 				#Now we have solved one big problem:
@@ -235,6 +247,14 @@ function readmods() {
 
 }
 
+function dlworkshopinteractive() {
+	local workshop
+
+	readmods workshop
+
+	dlworkshop ${workshop[@]}
+}
+
 #	
 #	Downloads Workshop Content
 #	
@@ -242,9 +262,7 @@ function dlworkshop() {
 
 	local workshop
 
-	#Launches the readmods() method
-	#Grabs the workshopid array from readmods()
-    readmods workshop
+	workshop=( "$@" )
 
 	echo -e "\n   $(tput setaf 6)Now we are going download your mods..."
 	echo -e "   $(tput setaf 5)and afterwards we check if some files / folders are uppercase...$(tput setaf 7)"
@@ -257,13 +275,17 @@ function dlworkshop() {
 		echo -e "\n\n   $(tput setaf 2)mod $i: ${workshop[$i]} $(tput setaf 7)| $(tput setaf 3)$j mod(s) left \n\n$(tput setaf 7)"
 
 		#Here we download the workshop mods
-		"${steamcmd}" +login anonymous +workshop_download_item "${gameid}" "${workshop[$i]}" validate +quit
+		"${steamcmd}" $(echo "+login ${steamuser} ${steampass} +workshop_download_item ${gameid} ${workshop[$i]} validate +quit" | tr -d '"')
 
         #Symlink mods into $modpath directory
         #This saves huge amount of disk space
         #Because, for each arma server you use, you only need to have a link to the modfiles inside the /mods directory
         #And no mod files, e.g. 5 servers use the same mod folder, instead of having 5 different unique mod folders
-        ln -s "$workshoppath${workshop[$i]}" "$modpath"
+        ln -s "$workshoppath${workshop[$i]}" "$modpath${workshop[$i]}"
+
+		#Add mod to modlist in instance config
+		regex="s,mods=\",&mods/${workshop[$i]};,"
+		sed -i $regex $instanceconfig
 
 		#Now we add one, so we download the next item
 		let i+=1
@@ -425,7 +447,7 @@ function updatemods() {
 	do
 		echo -e "\n\n$(tput setaf 2)Index: $i | Mod: ${wppdir_ar[i]:${#workshoppath}}$(tput setaf 7) | $(tput setaf 3)$(grep -m 1 'name' ${modname_ar[$i]})\n\n\n$(tput setaf 7)"
 
-		"${steamcmd}" +login anonymous +workshop_download_item "${gameid}" ${wppdir_ar[i]:${#workshoppath}} validate +quit
+		"${steamcmd}" $(echo "+login ${steamuser} ${steampass} +workshop_download_item ${gameid} ${wppdir_ar[i]:${#workshoppath}} validate +quit" | tr -d '"')
 	done
 }
 
@@ -453,11 +475,41 @@ function cronupdatemods() {
 
 		echo -e "\n\nNumber: $j | Mod: ${wppdir_ar[j]:${#workshoppath}} $(grep -m 1 'name' ${modname_ar[$j]})\n\n\n"
 
-		"${steamcmd}" +login anonymous +workshop_download_item "${gameid}" ${wppdir_ar[j]:${#workshoppath}} validate +quit
+		"${steamcmd}" $(echo "+login ${steamuser} ${steampass} +workshop_download_item ${gameid} ${wppdir_ar[j]:${#workshoppath}} validate +quit" | tr -d '"')
 
 		j=j+1
 	done
 }
+
+function readmodlist() 
+{
+	file=${modlists}/$1
+	regex=".+, https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=([[:digit:]]+)"
+
+	# clear previous mod symlinks
+	rm ${modpath}*
+
+	# remove mod line from instance config
+	sed -i '/mods=/c\mods=""' $instanceconfig
+	
+	if [ -f "$file" ]
+	then
+		mods=()
+		while read -r line
+		do
+			if [[ $line =~ $regex ]]
+			then
+				mods+=(${BASH_REMATCH[1]})
+			fi
+		done < $file
+		#printf "%s\n" "${mods[@]}"
+		dlworkshop ${mods[@]}
+
+	else
+		echo -e "   $(tput setaf 1)ERROR:$(tput setaf 7) Modlist does't exist!\n" 
+	fi
+}
+
 
 #	
 #	Main
@@ -472,7 +524,7 @@ main() {
 
 	case "$1" in
 		dl|download)    echo -e "\n   workshop download... \n" 
-						dlworkshop 
+						dlworkshopinteractive 
 						;;
 
 		co|count)   	echo -e "\n   counting mods... \n" 
@@ -498,6 +550,10 @@ main() {
 						lowercase 
 						;;
 
+		ml|modlist)     echo -e "\n	   import modlist... \n"
+						readmodlist $2
+						;;
+
 		h|help|*)    	echo -e "
    h|help\t  - Shows this help text, check the github page for more informations
    dl|download\t  - Download Mods
@@ -505,8 +561,9 @@ main() {
    rk|removekeys  - Prompts the user for each one .bikey file found inside the server directory, if he wants to remove it from the server/keys directory
    co|count\t  - Shows the amount of mods & bikey files
    up|update\t  - Prompts the user for each Mod it finds, if he wants to update it
-   cup|cronupdate - updates all Mods it finds, without any prompt, ideal for using with cron
-   lo|lowercase\t  - Lowercases all mods\n" 
+   cup|cronupdate - Updates all Mods it finds, without any prompt, ideal for using with cron
+   lo|lowercase\t  - Lowercases all mods
+   ml|modlist\t  - Import a modlist from the Arma 3 Launcher
 						;;
 	esac
 
