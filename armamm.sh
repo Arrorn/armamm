@@ -1,9 +1,11 @@
 #!/bin/bash
 #
-#	Author: 	Deadalus3010
-#	GitHub:		https://github.com/Deadalus3010
-#	Purpose: 	Made for Linux Game Server Manager (lgsm)
-#	Github:		https://github.com/GameServerManagers
+#	Author: 		Deadalus3010
+#	GitHub:			https://github.com/Deadalus3010
+#   Contributor: 	Arrorn
+#	GitHub:			https://github.com/Arrorn
+#	Purpose: 		Made for Linux Game Server Manager (lgsm)
+#	Github:			https://github.com/GameServerManagers
 #
 #####################################
 
@@ -19,17 +21,15 @@ workshoppath='/home/lgsm/.steam/steam/steamapps/workshop/content/107410/'
 modpath='/home/lgsm/arma/serverfiles/mods/'
 #	ArmA 3 Keys Directory
 keypath='/home/lgsm/arma/serverfiles/keys/'
-
-#	lgsm config file containing steam username and password
+#	Lgsm config file containing steam username and password
 lgsmconfig='/home/lgsm/arma/lgsm/config-lgsm/arma3server/secrets-common.cfg'
-
+#   Lgsm config file for the arma 3 server instance
 instanceconfig='/home/lgsm/arma/lgsm/config-lgsm/arma3server/arma3server.cfg'
-
-#	lgsm SteamCMD path & game gameid
+#	Lgsm SteamCMD path & game gameid
 steamcmd='/usr/games/steamcmd'
-# Arma 3 game id
+#   Arma 3 game id
 gameid='107410'
-# Arma 3 Modlists
+#   Arma 3 Modlists folder path
 modlists='/home/lgsm/arma/modlists'
 
 #
@@ -87,27 +87,33 @@ function lowercase() {
 		#
 		for ((i=1;i<=3;i++))
 		do
-			for x in $(find $workshoppath -maxdepth $i | grep [A-Z])
+			#for x in $(find $workshoppath -maxdepth $i | grep [A-Z])
+			find $workshoppath -maxdepth $i -print0 | 
+			while IFS= read -r -d '' x
 			do
-				#${stringZ:NUMBER} --> "Removes" the characters from the first index |  #${#string} --> gets the number of characters the string has
-				#Here we "substract" the path from the mod
-				#After this operation, y will contain only the mod folder structure and the capital letter found file / folder
-				#This way, we dont lowercase anything that is inside the workshop path 
-				# -> linux is case sensitive, which means, that the script cant find an folder which is e.g. normally uppercase
-				#We only lowercase the modpath itself
-				y="${x:${#workshoppath}}"
-			
-				#Here we lowercase the mod files / folders
-				y=$(echo "${y}" | tr '[:upper:]' '[:lower:]')
+				if [[ $x =~ [A-Z] ]]
+				then
+					#${stringZ:NUMBER} --> "Removes" the characters from the first index |  #${#string} --> gets the number of characters the string has
+					#Here we "substract" the path from the mod
+					#After this operation, y will contain only the mod folder structure and the capital letter found file / folder
+					#This way, we dont lowercase anything that is inside the workshop path 
+					# -> linux is case sensitive, which means, that the script cant find an folder which is e.g. normally uppercase
+					#We only lowercase the modpath itself
+					y="${x:${#workshoppath}}"
+				
+					#Here we lowercase the mod files / folders
+					y=$(echo "${y}" | tr '[:upper:]' '[:lower:]')
 
-				#Here we create the new path + lowercased mod
-				#Now we have solved one big problem:
-				#We did not lowercase the path to the mod itself
-				#We only lowercased the mod
-				workshop2=$workshoppath$y
+					#Here we create the new path + lowercased mod
+					#Now we have solved one big problem:
+					#We did not lowercase the path to the mod itself
+					#We only lowercased the mod
+					workshop2=$workshoppath$y
 
-				#Now we lowercase the found mods without changing the modpath
-				mv $x $workshop2
+					#Now we lowercase the found mods without changing the modpath
+
+					mv "${x}" "${workshop2}"
+				fi
 			done
 		done
 
@@ -288,9 +294,9 @@ function dlworkshop() {
 		sed -i $regex $instanceconfig
 
 		#Now we add one, so we download the next item
-		let i+=1
+		((i+=1))
 		#Here we decrement the value to display the amount of mods that are left to download
-		let j-=1
+		((j-=1))
 
 		#Linebreak, because sometimes steamcmd and the command prompt in linux are in the same line
 		echo -e "\n"
@@ -328,7 +334,7 @@ function addkeys() {
 		#And how do we get the name? First, we need to get the path to the mod file
 		modname_ar+=($(find ${wppdir_ar[$j]} -name "mod.cpp" -o -name "meta.cpp" | head -n 1))
 
-		j=j+1
+		((j+=1))
 	done
 
 	typeset -i i=0 max=${#bikey_ar[*]}
@@ -362,7 +368,7 @@ function addkeys() {
 
 		fi
 
-		i=i+1
+		((i+=1))
 	done
 }
 
@@ -412,7 +418,7 @@ function removekeys() {
 		then
             rm ${kbikey_ar[$i]} #Here we delete the .bikey file, bye bye, you wont be missed :) (hopefully)
 		fi
-		i+=1
+		((i+=1))
 	done
 }
 
@@ -433,7 +439,7 @@ function updatemods() {
 	do
 		modname_ar+=($(find ${wppdir_ar[$i]} -name "mod.cpp" -o -name "meta.cpp" | head -n 1))
 		echo -e "Number: $i | $(tput setaf 2)Mod: ${wppdir_ar[i]:${#workshoppath}}$(tput setaf 7) | $(tput setaf 3)$(grep -m 1 'name' ${modname_ar[$i]})$(tput setaf 7)"
-		i=i+1
+		((i+=1))
 	done
 
 	echo -e "   What would you like to update?\n   ?:"
@@ -447,7 +453,7 @@ function updatemods() {
 	do
 		echo -e "\n\n$(tput setaf 2)Index: $i | Mod: ${wppdir_ar[i]:${#workshoppath}}$(tput setaf 7) | $(tput setaf 3)$(grep -m 1 'name' ${modname_ar[$i]})\n\n\n$(tput setaf 7)"
 
-		"${steamcmd}" $(echo "+login ${steamuser} ${steampass} +workshop_download_item ${gameid} ${wppdir_ar[i]:${#workshoppath}} validate +quit" | tr -d '"')
+		"$steamcmd" $(echo "+login ${steamuser} ${steampass} +workshop_download_item ${gameid} ${wppdir_ar[i]:${#workshoppath}} validate +quit" | tr -d '"')
 	done
 }
 
@@ -475,41 +481,125 @@ function cronupdatemods() {
 
 		echo -e "\n\nNumber: $j | Mod: ${wppdir_ar[j]:${#workshoppath}} $(grep -m 1 'name' ${modname_ar[$j]})\n\n\n"
 
-		"${steamcmd}" $(echo "+login ${steamuser} ${steampass} +workshop_download_item ${gameid} ${wppdir_ar[j]:${#workshoppath}} validate +quit" | tr -d '"')
+		"$steamcmd" $(echo "+login ${steamuser} ${steampass} +workshop_download_item ${gameid} ${wppdir_ar[j]:${#workshoppath}} validate +quit" | tr -d '"')
 
-		j=j+1
+		((j+=1))
 	done
 }
 
 function readmodlist() 
 {
 	file=${modlists}/$1
+	if ! [[ -r "$file" ]]
+	then
+		file=$1
+	fi
 	regex=".+, https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=([[:digit:]]+)"
 
 	# clear previous mod symlinks
-	rm ${modpath}*
+	if [ "$(ls -A $modpath)" ];
+	then
+		rm ${modpath}*
+	fi
 
 	# remove mod line from instance config
 	sed -i '/mods=/c\mods=""' $instanceconfig
 	
-	if [ -f "$file" ]
+	# If the file exists
+	if [[ -r "$file" ]]
 	then
 		mods=()
+		# Read file line by line
 		while read -r line
 		do
+			# If line matches regex for mod link
 			if [[ $line =~ $regex ]]
 			then
+				# Add mod to list
 				mods+=(${BASH_REMATCH[1]})
 			fi
 		done < $file
-		#printf "%s\n" "${mods[@]}"
+		# Pass list of mods id's to dlworkshop
 		dlworkshop ${mods[@]}
-
 	else
 		echo -e "   $(tput setaf 1)ERROR:$(tput setaf 7) Modlist does't exist!\n" 
 	fi
 }
 
+function enabledlc()
+{
+	# Read in arguments if any are passed
+	dlcs=(${@:2})
+    typeset -i dlcid=0
+
+	# Table of current dlcs/cdlcs
+	declare -A availabledlcs
+	availabledlcs=(["curator"]="Arma 3 Zeus" ["kart"]="Arma 3 Karts" ["heli"]="Arma 3 Helicopters" ["mark"]="Arma 3 Marksmen" ["expansion"]="Arma 3 Apex" ["jets"]="Arma 3 Jets" ["argo"]="Arma 3 Malden" ["orange"]="Arma 3 Laws of War" ["tacops"]="Arma 3 Tac-Ops Mission Pack" ["tank"]="Arma 3 Tanks" ["enoch"]="Arma 3 Contact" ["aow"]="Arma 3 Art of War" ["csla"]="CSLA Iron Curtain" ["gm"]="Global Mobilization" ["vn"]="S.O.G. Prairie Fire" ["ws"]="Western Sahara")
+
+	echo -e "\n   Please select the id or class name of the DLC/CDLC you wish to enable"
+	echo -e "   when you are finished, type 'x'|'exit'\n"
+
+	# Print out menu of dlcs
+	j=1
+	for i in "${!availabledlcs[@]}"
+	do
+		len=`expr "$i" : '.*'`
+		if [[ $len -gt 4 ]]
+		then
+			tabs="\t"
+		else
+			tabs="\t\t"
+		fi
+		echo -e "   [$j]\t| $i $tabs  - ${availabledlcs[$i]}"
+		((j+=1))
+	done
+
+	keys=(${!availabledlcs[@]})
+
+	# While not done
+	while [[ $dlcid != "x" && $dlcid != "exit" ]]
+	do
+		# Read in id
+		unset dlcid
+		read -p "   id:" dlcid
+		# If it's a number get the possible key
+		poskey=${keys[$dlcid - 1]}
+
+		# If the dlcid is not a digit or a dlc class name?
+		if ! ( [[ $dlcid =~ ^[[:alpha:]]+$ || $dlcid =~ ^[[:digit:]]+$ ]] && [[ "${availabledlcs[$dlcid]+x}" || "${availabledlcs[$poskey]+x}" ]] )
+		then
+			#Warns the user that his input arent just digits, or just letters and a dlc (only once)
+			echo -ne "   $(tput setaf 1)ERROR:$(tput setaf 7) Please only use digits, or letters not both\n"
+			while ! ( [[ $dlcid =~ ^[[:alpha:]]+$ || $dlcid =~ ^[[:digit:]]+$ ]] && [[ "${availabledlcs[$dlcid]+x}" || "${availabledlcs[$poskey]+x}" ]] )
+			do
+				# Read in id
+				read -p "   id:" dlcid
+				poskey=${keys[$dlcid - 1]}
+			done
+		fi
+
+		# If it's a digit set to the possible key
+		if [[ $dlcid =~ ^[[:digit:]]+$ ]]
+		then
+			dlcid=$poskey 
+		fi
+		# If it's a valid dlc add to list to enable. This is to catch the final x/exit
+		if ( [[ $dlcid =~ ^[[:alpha:]]+$ && "${availabledlcs[$dlcid]+x}" ]] )
+		then
+			dlcs+=($dlcid)
+		fi
+	done
+
+	# For the dlcs in the list
+	for i in "${dlcs[@]}"
+	do
+		echo -e "   enabling ${availabledlcs[$i]} ($i)"
+		#Add dlc to modlist in instance config
+		regex="s,mods=\",&${i};,"
+		sed -i $regex $instanceconfig
+	done
+
+}
 
 #	
 #	Main
@@ -553,6 +643,9 @@ main() {
 		ml|modlist)     echo -e "\n	   import modlist... \n"
 						readmodlist $2
 						;;
+		en|enable)		echo -e "\n    enable dlc... \n"
+						enabledlc
+						;;
 
 		h|help|*)    	echo -e "
    h|help\t  - Shows this help text, check the github page for more informations
@@ -564,6 +657,7 @@ main() {
    cup|cronupdate - Updates all Mods it finds, without any prompt, ideal for using with cron
    lo|lowercase\t  - Lowercases all mods
    ml|modlist\t  - Import a modlist from the Arma 3 Launcher
+   en|enable\t  - Enable a DLC in configuration\n" 
 						;;
 	esac
 
