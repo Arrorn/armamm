@@ -44,6 +44,12 @@ Counts all downloaded Mods and .bikey Files
 
 5. *Lowercase*  
 Lowercases all Mods inside the steam workshop directory  
+
+6. *Import Modlist*
+Import and download a modlist exported from the Arma 3 Launcher. Must be in txt format at the moment.
+
+7. *Enable DLCs*
+Enable DLC's and Creator DLC's
   
 #### Usage:  
   
@@ -54,15 +60,15 @@ Change the file permissions, so it can be executed
 Then simply run *./armamm.sh*  
   
 To Download Mods:  
-> ./armamm.sh dl | ./armamm.sh download  
+> `./armamm.sh dl` | `./armamm.sh download`  
   
 To Manage .bikey Files:  
-> Add: ./armamm.sh ak | ./armamm.sh addkeys  
-> Remove: ./armamm.sh rk | ./armamm.sh removekeys  
+> Add: `./armamm.sh ak` | `./armamm.sh addkeys`  
+> Remove: `./armamm.sh rk` | `./armamm.sh removekeys`  
   
 To Update Mods:  
-> Update manually: ./armamm.sh up | ./armamm.sh updatemods  
-> Cronupdate: ./armamm.sh cup | ./armamm.sh cronupdate  
+> Update manually: `./armamm.sh up` | `./armamm.sh updatemods`  
+> Cronupdate: `./armamm.sh cup` | `./armamm.sh cronupdate`  
 Example cron entry:  
 > 0 8 * * * /home/lgsm/arma/armamm.sh cup >> /home/lgsm/cron/arma/\`date +\%y\%m\%d\`_armamm.sh_cronupdate.log  
 > Each day, at 8am, cron will run the script and writes the output in a file with the current year, month, day in its filename
@@ -70,18 +76,24 @@ Example cron entry:
 
   
 To Count Mods:  
-> ./armamm.sh co | ./armamm.sh count  
+> `./armamm.sh co` | `./armamm.sh count`
   
 To Lowercase Mods:  
-> ./armamm.sh lo | ./armamm.sh lowercase  
+> `./armamm.sh lo` | `./armamm.sh lowercase`
+
+To Import a Modlist:
+> `./armamm.sh ml ./wh40k.txt` | `./armamm.sh modlist mikeforce.txt`
+
+To Enable DLC's:
+> `./armamm.sh en` | `./armamm.sh enable`
   
 Running the script without any or wrong parameters or with h / help:  
 Shows the Help menu  
-> ./armamm.sh h | ./armamm.sh help  
+> `./armamm.sh h` | `./armamm.sh help`
 
 ##### Found Bugs or have improvements?  
   
-Please use the "Issues" (https://github.com/Deadalus3010/armamm/issues) section!  
+Please use the "Issues" (https://github.com/Arrorn/armamm/issues) section!  
   
 ###### Thats all  
   

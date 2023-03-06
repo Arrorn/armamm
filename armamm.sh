@@ -85,7 +85,7 @@ function lowercase() {
 		#
 		#	Slightly modified
 		#
-		for ((i=1;i<=3;i++))
+		for ((i=1;i<=10;i++))
 		do
 			#for x in $(find $workshoppath -maxdepth $i | grep [A-Z])
 			find $workshoppath -maxdepth $i -print0 | 
