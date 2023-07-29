@@ -9,6 +9,8 @@
 #
 #####################################
 
+version='1.4'
+
 #
 #	PLEASE EDIT THESE VALUES
 #	Currently only possible with one server, so create the script for each server individually
@@ -24,7 +26,7 @@ keypath='/home/lgsm/arma/serverfiles/keys/'
 #	Lgsm config file containing steam username and password
 lgsmconfig='/home/lgsm/arma/lgsm/config-lgsm/arma3server/secrets-common.cfg'
 #   Lgsm config file for the arma 3 server instance
-instanceconfig='/home/lgsm/arma/lgsm/config-lgsm/arma3server/arma3server.cfg'
+instanceconfig='/home/lgsm/arma/lgsm/config-lgsm/arma3server/common.cfg'
 #	Lgsm SteamCMD path & game gameid
 steamcmd='/usr/games/steamcmd'
 #   Arma 3 game id
@@ -42,6 +44,7 @@ modlists='/home/lgsm/arma/modlists'
 
 steamuser=$(awk -F "=" '/steamuser/ {print $2}' $lgsmconfig)
 steampass=$(awk -F "=" '/steampass/ {print $2}' $lgsmconfig)
+sleeptime=5
 
 #
 #	Lowercases all mods
@@ -301,6 +304,8 @@ function dlworkshop() {
 		#Linebreak, because sometimes steamcmd and the command prompt in linux are in the same line
 		echo -e "\n"
 
+        sleep $sleeptime
+
 	done
 
 	#Now we run the lowercase function
@@ -494,7 +499,6 @@ function readmodlist()
 	then
 		file=$1
 	fi
-	regex=".+, https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=([[:digit:]]+)"
 
 	# clear previous mod symlinks
 	if [ "$(ls -A $modpath)" ];
@@ -508,6 +512,12 @@ function readmodlist()
 	# If the file exists
 	if [[ -r "$file" ]]
 	then
+		if [[ $file == *.txt ]]
+		then
+			regex=".+, https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=([[:digit:]]+)"
+		else
+			regex='.*<a href="https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=([[:digit:]]+).*'
+		fi
 		mods=()
 		# Read file line by line
 		while read -r line
@@ -534,7 +544,7 @@ function enabledlc()
 
 	# Table of current dlcs/cdlcs
 	declare -A availabledlcs
-	availabledlcs=(["curator"]="Arma 3 Zeus" ["kart"]="Arma 3 Karts" ["heli"]="Arma 3 Helicopters" ["mark"]="Arma 3 Marksmen" ["expansion"]="Arma 3 Apex" ["jets"]="Arma 3 Jets" ["argo"]="Arma 3 Malden" ["orange"]="Arma 3 Laws of War" ["tacops"]="Arma 3 Tac-Ops Mission Pack" ["tank"]="Arma 3 Tanks" ["enoch"]="Arma 3 Contact" ["aow"]="Arma 3 Art of War" ["csla"]="CSLA Iron Curtain" ["gm"]="Global Mobilization" ["vn"]="S.O.G. Prairie Fire" ["ws"]="Western Sahara")
+	availabledlcs=(["curator"]="Arma 3 Zeus" ["kart"]="Arma 3 Karts" ["heli"]="Arma 3 Helicopters" ["mark"]="Arma 3 Marksmen" ["expansion"]="Arma 3 Apex" ["jets"]="Arma 3 Jets" ["argo"]="Arma 3 Malden" ["orange"]="Arma 3 Laws of War" ["tacops"]="Arma 3 Tac-Ops Mission Pack" ["tank"]="Arma 3 Tanks" ["enoch"]="Arma 3 Contact" ["aow"]="Arma 3 Art of War" ["csla"]="CSLA Iron Curtain" ["gm"]="Global Mobilization" ["vn"]="S.O.G. Prairie Fire" ["ws"]="Western Sahara" ["spe"]="Spearhead 1944")
 
 	echo -e "\n   Please select the id or class name of the DLC/CDLC you wish to enable"
 	echo -e "   when you are finished, type 'x'|'exit'\n"
@@ -606,7 +616,7 @@ function enabledlc()
 #	
 main() {
 
-	echo -e "\n ArmA 3 ez Mod Manager -- v1.3"
+	echo -e "\n ArmA 3 Mod Manager -- v${version}"
 
 	#
 	#	ArmA Mod Manager Main Menu

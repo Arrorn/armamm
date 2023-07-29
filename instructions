@@ -1,0 +1,30 @@
+
+Instructions for Arma Server:
+### Switching Modlists
+  * Open and login to https://libpmc.com:9090
+  * Open `Navigator` on the left hand side menu
+  * Navigate to `/home/lgsm/arma/modlists`
+  * Upload or modify the desired modlist
+    * You can upload a modlist using the button in the top right corner of a disk drive with an arrow point upwards, `Upload File`
+      * This should be the txt file exported from the Arma 3 Launcher when you select txt instead of html as the export type
+    * You can edit a modlist by double clicking on the modlist, or selecting the file and clicking `Edit Contents`, the button with a pencil inside of a box on the right hand side of the file name
+      * When you are done editing the contents of the file make sure to select `Save Changes` at the bottom right of the editing box, the button with a floppy disk icon
+  * Open `Terminal` on the left hand side menu
+  * Execute `sudo su - lgsm` to switch to the lgsm user
+    * If you need to paste your password the keyboard shortcut for this terminal is `Shift+Insert`
+    * You will not see your password as you type it or if you paste it
+  * Navigate into the arma server folder by running the command `cd arma`
+  * Change the modlist using the command `./armamm.sh ml <modlist_file_name>`
+    * Replacing `<modlist_file_name>` with the txt file name in the modlists folder
+  * If the modlist requires a dlc or cdlc run the command `./armamm.sh en`
+    * Select the dlc's that need to be enabled from the menu, either with the number id or class name
+    * Exit the script by typing `x` or `exit`
+  * If you need to upload a mission map or to rename it from a mod folder. Use `Navigator` to go to `/home/lgsm/arma/serverfiles/mpmissions` and upload the .pbo
+    * If the mission map is in a mod that you need move into the missions folder the mods are installed to `/home/lgsm/arma/serverfiles/mods`
+      * Locate the mod the mission file is in and open it. Right click on the mission file and select `Copy`
+      * Navigate back to `/home/lgsm/arma/serverfiles/mpmissions` and right click and select `Paste`
+      * If you need to rename the mission file you can right click it and select `Rename`
+  * If you do upload a mission file or modlist make sure when you select the mission file or modlist in the right hand box it says that the `Owner` and `Group` are `lgsm`
+    * If you need to change them select the button with three lines in the middle in that same box, `Edit Properties` and change the `Owner` and `Group` to be `lgsm`
+    * Click `Save Changes` button in the lower right hand corner with the floppy disk icon
+  * Restart the server by running `./arma3server restart` or if it's not already running start it with `./arma3server start`
